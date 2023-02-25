@@ -1,5 +1,5 @@
 ---
-title: "The aggregated case time series and space-time-stratified case crossover design"
+title: "The small-area case time series and space-time-stratified case crossover design"
 author: "Yuantong (Anthony) Sun"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
