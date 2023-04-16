@@ -42,8 +42,7 @@ Anthony added codes for an individual time-stratified case crossover study desig
 The following packages are loaded in the session, and need to be installed to run the R code:
 
 ```{r packages, message=FALSE}
-library(dlnm) ; library(gnm) ; library(data.table) ; library(splines); library(dplyr); 
-library(tidyr);library(dlnm);library(splines);library(gnm);library(survival)
+library(dlnm) ; library(gnm) ; library(data.table) ; library(splines); library(dplyr); library(tidyr); library(dlnm);library(splines);library(gnm);library(survival)
 ```
 
 We first set a seed to ensure the exact replicability of the results, as the code includes expressions with random number generation, and we also set the graphical parameter `las` for the plots:
@@ -192,9 +191,9 @@ layout(1)
 We have now all the information required for simulating the original data. These are created by looping in a list, producing the observations for each subject, and then binding them in a dataframe. Each of the blocks of code in the loop performs the following steps for each subject:
 
   1. Define the follow-up period and identify the related subset of the study period
-  1. Create the total risk contribution in each follow-up day 
-  1. Sample the occurrence of respiratory symptoms within the follow-up period
-  1. Put the information together in a dataframe, adding the series of environmental exposures
+  2. Create the total risk contribution in each follow-up day 
+  3. Sample the occurrence of respiratory symptoms within the follow-up period
+  4. Put the information together in a dataframe, adding the series of environmental exposures
 
 Here is the R code:
 
@@ -332,7 +331,7 @@ cases <- data_cc %>% filter(y==1) %>% select(-c("pollen","pm","tmean"))
 
 Second, generate case crossover data structure.
 
-```{r, results='hide'}
+```{r}
 ds <- data.frame(case_date=as.Date(character()),
                  control_date1=as.Date(character()), control_date2=as.Date(character()),
                  control_date3=as.Date(character()), control_date4=as.Date(character()),
@@ -355,7 +354,6 @@ for(i in seq(nrow(series))){
   ds[i, 10] <- series$case_date[i]+28
 }
 
-# Transform wide format to long format
 ds <- ds %>% gather('var','control_date', control_date1:control_date9) %>% 
   filter(month(case_date)==month(control_date)) %>% select(-var) %>% 
   mutate(case=case_when(case_date==control_date~1, TRUE~0))
@@ -389,7 +387,10 @@ cbpm <- crossbasis(dat[,c(9,14:16)], lag=3, arglag=list("integer"))
 cbtmean <- crossbasis(dat[,c(10,17:19)], lag=3, argvar=list(knots=1:2*10),
   arglag=list(knots=1))
 
-mod <- clogit(case ~ cbpoll + cbpm + cbtmean + strata(id), data=dat)
+#risk set
+dat$stratum <- with(dat, factor(paste(id, year, month, dow, sep="-")))
+ 
+mod <- clogit(case ~ cbpoll + cbpm + cbtmean + strata(stratum), data=dat)
 
 ```
 
